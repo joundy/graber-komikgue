@@ -1,6 +1,6 @@
 <?php
 
-require('lib/method.php');
+require('lib/main.php');
 
 // $opts = array('http'=>array('header' => "User-Agent:MyAgent/1.0\r\n"));
 // $context = stream_context_create($opts);
@@ -134,5 +134,5 @@ $data = [
 // echo $categories;
 // var_dump($data);
 
-$method = new method();
-$method->execute($data);
+$main = new main();
+$main->execute($data);

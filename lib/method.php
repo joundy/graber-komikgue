@@ -17,20 +17,13 @@ class method extends db{
                     (slug,name,otherNames,releaseDate,summary,cover,status_id,user_id,created_at,updated_at)
                     values (?,?,?,?,?,?,?,?,now(),now())";
         $stmt = $this->connection->prepare($query);
-
-        try{
-            $stmt->execute($data);
-            $lastId = $this->connection->lastInsertId();
-        }
-        catch(PDOExecption $e){
-            return false;
-        }
+        $stmt->execute($data);
+        $lastId = $this->connection->lastInsertId();
 
         return $lastId;
     }
 
     public function author($name){
-        //check author
         $query = "SELECT * FROM author where name = ? LIMIT 1";
         $stmt = $this->connection->prepare($query);
         $stmt->execute([$name]);
@@ -62,22 +55,13 @@ class method extends db{
         $query = "INSERT INTO author_manga VALUES(?,?,?)";
         $stmt = $this->connection->prepare($query);
 
-        try{
-            // $this->connection->beginTransaction();
-
-            for ($i=0; $i < count($authors) ; $i++) { 
-                $stmt->execute([$mangaId, $this->author($authors[$i]),$type]);
-            }
-
-            // $this->connection->commit();
+        for ($i=0; $i < count($authors) ; $i++) { 
+            $stmt->execute([$mangaId, $this->author($authors[$i]),$type]);
         }
-        catch(PDOExecption $e){
-            return false;
-        }
+
     }
 
     public function category($name){
-        //check category
         $query = "SELECT * FROM category where name = ? LIMIT 1";
         $stmt = $this->connection->prepare($query);
         $stmt->execute([$name]);
@@ -92,13 +76,9 @@ class method extends db{
             $query = "INSERT into category (slug,name, created_at, updated_at) values ('".str_replace(' ','-',$name)."',?,now(),NULL)";
             $stmt = $this->connection->prepare($query);
 
-            try{
-                $stmt->execute([$name]);
-                $id = $this->connection->lastInsertId();
-            }
-            catch(PDOExecption $e){
-                return false;
-            }
+            $stmt->execute([$name]);
+            $id = $this->connection->lastInsertId();
+
         }
 
         return $id;
@@ -109,64 +89,9 @@ class method extends db{
         $query = "INSERT INTO category_manga VALUES(?,?)";
         $stmt = $this->connection->prepare($query);
 
-        try{
-            // $this->connection->beginTransaction();
-
-            for ($i=0; $i < count($categories) ; $i++) { 
-                $stmt->execute([$mangaId, $this->category($categories[$i])]);
-            }
-
-            // $this->connection->commit();
+        for ($i=0; $i < count($categories) ; $i++) { 
+            $stmt->execute([$mangaId, $this->category($categories[$i])]);
         }
-        catch(PDOExecption $e){
-            return false;
-        }
-    }
-
-    public function execute($data){
-        //manga_check
-
-        try{
-            $this->connection->beginTransaction();
-
-            $manga_check = $this->manga_check($data['name']);
-
-            if(count($manga_check) > 0){
-                $mangaId = $manga_check[0]['id'];
-            }
-            else{
-
-                //insert manga when manga_check 0
-                $mangaId = $this->insert_manga([
-                    str_replace(' ','-',$data['name']),
-                    $data['name'],
-                    $data['otherName'],
-                    $data['release'],
-                    $data['summary'],
-                    0,
-                    $data['status'] == 'Ongoing' ? 1 : 2,
-                    1
-                ]);
-            }
-
-            //insert authors_manga
-            $this->insert_authors_manga($mangaId,$data['authors'],1);
-
-            //insert artists_manga
-            $this->insert_authors_manga($mangaId,[$data['artist']],2);
-
-            //insert categories
-            $this->insert_categories_manga($mangaId, $data['categories']);
-
-            $this->connection->commit();
-            return true;
-            
-        }
-
-        catch(PDOExecption $e){
-            return false;
-        } 
-
     }
 
 }
