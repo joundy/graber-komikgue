@@ -94,4 +94,24 @@ class method extends db{
         }
     }
 
+    public function insert_chapter($data){
+        $query = "INSERT INTO chapter (slug,name,number,volume,manga_id,user_id,created_at,updated_at) values(?,?,?,?,?,?,now(),now())";
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute($data);
+
+        $lastId = $this->connection->lastInsertId();
+
+        return $lastId;
+    }
+
+    public function insert_chapter_page($data){
+        $query = "INSERT INTO page (slug,image,external,chapter_id,created_at,updated_at) VALUES (?,?,?,?,now(),now())";
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute($data);
+
+        $lastId = $this->connection->lastInsertId();
+
+        return $lastId;
+    }
+
 }

@@ -1,10 +1,11 @@
 <?php
 
 require (dirname(__FILE__)."/../vendor/autoload.php");
+require (dirname(__FILE__)."/method.php");
 
 use PHPHtmlParser\Dom;
 
-class grabber{
+class grabber extends method{
 
     public $uri;
 
@@ -28,7 +29,7 @@ class grabber{
         $this->getInfo = $getInfo;
     }
 
-    public function grapUnSpecific($word){
+    public function grabUnSpecific($word){
         if(strpos($this->getInfo, $word) !== false){
             $grab = explode("<dt>$word</dt> <dd>",$this->getInfo);
             $grab = explode('</dd>',$grab[1]);
@@ -63,7 +64,19 @@ class grabber{
         return $grabs;
     }
 
-    public function executeManga($uri){
+    public function grabChapter($uri){
+        $opts = array('http'=>array('header' => "User-Agent:MyAgent/1.0\r\n"));
+        $context = stream_context_create($opts);
+        $data = file_get_contents($uri,false,$context);
+        $data = explode('var pages =',$data);
+        $data = explode('var next_chapter =',$data[1]);
+            
+        $data = json_decode(str_replace('];',']',$data[0]), TRUE);
+
+        return $data;
+    }
+
+    public function grabManga($uri){
         $this->dom = new Dom();
 
         $this->uri = $uri;
@@ -71,8 +84,8 @@ class grabber{
         $this->getData();
         $this->getInfo();
 
-        $name       = $this->dom->find('.widget-title',0)->text;
-        $status     = $this->dom->find('.label',0)->text;
+        $name   = $this->dom->find('.widget-title',0)->text;
+        $status = $this->dom->find('.label',0)->text;
 
         if(strpos($this->getInfo, 'margin-bottom:0;') !== false){
             $summary = $this->dom->find('p[style=margin-bottom:0;]',0)->text;
@@ -81,10 +94,19 @@ class grabber{
             $summary = null;
         }
 
+        $chapters = [];
+        foreach ($this->dom->find('.chapters li[style=padding: 3px 0;]') as $value) {
+            $chapters[] = [
+                'link' => $value->find('a')->href,
+                'number' => explode(' ',$value->find('a')->text)[1],
+                'title' => $value->find('em')->text
+            ];
+        }
+
         $img        = $this->dom->find('.img-responsive')->src;
-        $otherName  = $this->grapUnSpecific('Nama lain');
-        $release    = $this->grapUnSpecific('Waktu rilis');
-        $artist     = $this->grapUnSpecific('Artist(s)');
+        $otherName  = $this->grabUnSpecific('Nama lain');
+        $release    = $this->grabUnSpecific('Waktu rilis');
+        $artist     = $this->grabUnSpecific('Artist(s)');
         $categories = $this->grabArraysData('Kategori');
         $authors    = $this->grabArraysData('Author(s)');
 
@@ -97,7 +119,8 @@ class grabber{
             'categories' => $categories,
             'authors'    => $authors,
             'summary'    => $summary,
-            'img'        => $img
+            'img'        => $img,
+            'chapters'   => $chapters
         ];
 
         return $data;

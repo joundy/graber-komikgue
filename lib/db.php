@@ -5,7 +5,7 @@ class db
 	private $dbDriver = "mysql";
 	private $host = "127.0.0.1";
 	private $username = "root";
-	private $password = "hafizsn2834";
+	private $password = "";
 	private $database = "pukomik";
     protected $connection;
     
