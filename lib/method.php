@@ -1,6 +1,6 @@
 <?php
 
-require('db.php');
+require(dirname(__FILE__).'/db.php');
 
 class method extends db{
 

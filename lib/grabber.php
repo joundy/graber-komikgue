@@ -1,6 +1,7 @@
 <?php
 
-require "../vendor/autoload.php";
+require (dirname(__FILE__)."/../vendor/autoload.php");
+
 use PHPHtmlParser\Dom;
 
 class grabber{
@@ -71,8 +72,15 @@ class grabber{
         $this->getInfo();
 
         $name       = $this->dom->find('.widget-title',0)->text;
-        $status     = $this->dom->find('.label-success',0)->text;
-        $summary    = $this->dom->find('p[style=margin-bottom:0;]',0)->text;
+        $status     = $this->dom->find('.label',0)->text;
+
+        if(strpos($this->getInfo, 'margin-bottom:0;') !== false){
+            $summary = $this->dom->find('p[style=margin-bottom:0;]',0)->text;
+        }
+        else{
+            $summary = null;
+        }
+
         $img        = $this->dom->find('.img-responsive')->src;
         $otherName  = $this->grapUnSpecific('Nama lain');
         $release    = $this->grapUnSpecific('Waktu rilis');
@@ -95,6 +103,3 @@ class grabber{
         return $data;
     }
 }
-
-$grabber = new grabber();
-var_dump($grabber->executeManga('https://www.komikgue.com/manga/one-piece'));

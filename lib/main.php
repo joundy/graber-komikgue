@@ -1,17 +1,27 @@
 <?php
 
-require('method.php');
+require(dirname(__FILE__).'/method.php');
+require(dirname(__FILE__).'/grabber.php');
 
 class main extends method{
 
-    public function execute($data){
+    public function reuploadImg($name,$url){
+        
+    }
+
+    public function executeManga($uri){
+        $grabber = new grabber();
+        $data    = $grabber->executeManga($uri);
+
         try{
             $this->connection->beginTransaction();
 
             $manga_check = $this->manga_check($data['name']);
 
             if(count($manga_check) > 0){
-                $mangaId = $manga_check[0]['id'];
+                // $mangaId = $manga_check[0]['id'];
+                return false;
+                exit;
             }
             else{
 
@@ -39,7 +49,6 @@ class main extends method{
 
             $this->connection->commit();
             return true;
-            
         }
 
         catch(PDOExecption $e){

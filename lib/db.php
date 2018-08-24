@@ -6,7 +6,7 @@ class db
 	private $host = "127.0.0.1";
 	private $username = "root";
 	private $password = "";
-	private $database = "";
+	private $database = "pukomik";
     protected $connection;
     
 	public function __construct(){
