@@ -64,7 +64,7 @@ class grabber extends method{
         return $grabs;
     }
 
-    public function grabChapter($uri){
+    public function grabPages($uri){
         $opts = array('http'=>array('header' => "User-Agent:MyAgent/1.0\r\n"));
         $context = stream_context_create($opts);
         $data = file_get_contents($uri,false,$context);
