@@ -3,7 +3,7 @@
 require('lib/main.php');
 $main = new main();
 
-if($main->executeManga('https://www.komikgue.com/manga/20th-century-boys')){
+if($main->executeManga('https://www.komikgue.com/manga/ao-no-exorcist')){
     echo 'Success';
 }
 else{

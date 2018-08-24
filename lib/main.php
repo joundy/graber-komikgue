@@ -7,6 +7,20 @@ class main extends method{
 
     public function reuploadImg($name,$url){
         
+        $name = str_replace(' ','-',$name);
+        
+        //create directory
+        if (!file_exists("../uploads/manga/$name") && !is_dir("../uploads/manga/$name")) {
+            mkdir("../uploads/manga/$name");         
+        }
+
+        if (!file_exists("../uploads/manga/$name/cover") && !is_dir("../uploads/manga/$name/cover")) {
+            mkdir("../uploads/manga/$name/cover");         
+        }
+
+        //copy img
+        copy($url,"../uploads/manga/$name/cover/cover_250x350.jpg");
+        copy(str_replace('/cover_250x350.jpg','/cover_thumb.jpg',$url),"../uploads/manga/$name/cover/cover_thumb.jpg");
     }
 
     public function executeManga($uri){
@@ -32,7 +46,7 @@ class main extends method{
                     $data['otherName'],
                     $data['release'],
                     $data['summary'],
-                    0,
+                    1,
                     $data['status'] == 'Ongoing' ? 1 : 2,
                     1
                 ]);
@@ -48,6 +62,9 @@ class main extends method{
             $this->insert_categories_manga($mangaId, $data['categories']);
 
             $this->connection->commit();
+
+            //upload img
+            $this->reuploadImg($data['name'],$data['img']);
             return true;
         }
 
