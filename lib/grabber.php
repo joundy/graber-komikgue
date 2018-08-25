@@ -87,18 +87,19 @@ class grabber extends method{
         $name   = $this->dom->find('.widget-title',0)->text;
         $status = $this->dom->find('.label',0)->text;
 
-        if(strpos($this->getInfo, 'margin-bottom:0;') !== false){
+        if(strpos($this->getData, '<strong>Sipnosis</strong>') !== false){
             $summary = $this->dom->find('p[style=margin-bottom:0;]',0)->text;
         }
         else{
-            $summary = null;
+            $summary = 'yolo';
         }
 
         $chapters = [];
         foreach ($this->dom->find('.chapters li[style=padding: 3px 0;]') as $value) {
+            $number = explode(' ',$value->find('a')->text);
             $chapters[] = [
                 'link' => $value->find('a')->href,
-                'number' => explode(' ',$value->find('a')->text)[1],
+                'number' => end($number),
                 'title' => $value->find('em')->text
             ];
         }

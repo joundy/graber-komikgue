@@ -96,6 +96,7 @@ class method extends db{
 
     public function insert_chapter($data){
         $query = "INSERT INTO chapter (slug,name,number,volume,manga_id,user_id,created_at,updated_at) values(?,?,?,?,?,?,now(),now())";
+        // echo $query;
         $stmt = $this->connection->prepare($query);
         $stmt->execute($data);
 

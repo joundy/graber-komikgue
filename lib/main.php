@@ -48,6 +48,7 @@ class main extends grabber{
         echo "Grab Manga $uri \n";
         $this->data = $this->grabManga($uri);
 
+        var_dump($this->data);
         return $this;
     }
 
@@ -69,7 +70,7 @@ class main extends grabber{
                 'link'      => $this->data['chapters'][$i]['link']
             ]);
 
-            // var_dump($this->data['chapters'][$i]);
+            // echo $this->data['chapters'][$i]['number'];
         }
     }
 
