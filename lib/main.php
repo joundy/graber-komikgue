@@ -6,6 +6,7 @@ require(dirname(__FILE__).'/grabber.php');
 class main extends grabber{
 
     protected $data;
+    protected $mangaId;
 
     public function coverUpload($name,$url){
         
@@ -44,26 +45,49 @@ class main extends grabber{
     }   
 
     public function execute($uri){
-        // $this->data = $this->grabManga($uri);
+        echo "Grab Manga $uri \n";
+        $this->data = $this->grabManga($uri);
 
-        // var_dump($this->grabPages('https://www.komikgue.com/manga/horimiya/90'));
         return $this;
     }
 
-    public function speChapter(){
+    public function chapters(){
+
+        echo "Start insert chapters \n";        
+
+        for ($i=0; $i < count($this->data['chapters']) ; $i++) {
+            echo " Insert chapter".$this->data['chapters'][$i]['title']."\n";  
+
+            $this->speChapter([
+                'manganame' => str_replace(' ','-',strtolower($this->data['name'])),
+                'slug'      => $this->data['chapters'][$i]['number'],
+                'name'      => $this->data['chapters'][$i]['title'],
+                'number'    => $this->data['chapters'][$i]['number'],
+                'volume'    => null,
+                'manga_id'  => $this->mangaId,
+                'user_id'   => 1,
+                'link'      => $this->data['chapters'][$i]['link']
+            ]);
+
+            // var_dump($this->data['chapters'][$i]);
+        }
+    }
+
+    public function speChapter($data){
         $this->chapter([
-            'manganame' => 'nanatsu-no-taizai',
-            'slug'  => 95,
-            'name'  => "Testing chapterid",
-            'number' => 95,
-            'volume' => null,
-            'manga_id' => 2,
-            'user_id' => 1,
-            'link' => 'https://www.komikgue.com/manga/one-piece/915/1'
+            'manganame' => $data['manganame'],
+            'slug'      => $data['slug'],
+            'name'      => $data['name'],
+            'number'    => $data['number'],
+            'volume'    => $data['volume'],
+            'manga_id'  => $data['manga_id'],
+            'user_id'   => $data['user_id'],
+            'link'      => $data['link']
         ]);
     }
 
     public function chapter($data){
+        echo "Insert chapter into DB\n";
 
         $chapterId = $this->insert_chapter([
             $data['slug'],
@@ -74,10 +98,12 @@ class main extends grabber{
             $data['user_id']
         ]);
 
+        echo "Grab pages \n";
         $pages = $this->grabPages($data['link']);
 
         for ($i=0; $i < count($pages) ;  $i++) { 
 
+            echo  "Insert page ".$pages[$i]['page_slug']."\n";
             if($pages[$i]['external'] == 0){
 
                 $link = explode('/',$data['link']);
@@ -86,9 +112,10 @@ class main extends grabber{
                 $slug_url = $link[5];
 
                 $url = "https://www.komikgue.com/uploads/manga/$name/chapters/".$slug_url."/".$pages[$i]['page_image'];
-                $this->pageUpload($data['manganame'],$url,$data['slug'],$pages[$i]['page_image']);
+                $this->pageUpload($data['manganame'],$url,$slug_url,$pages[$i]['page_image']);
             }
 
+            echo  "Insert page ".$pages[$i]['page_slug']." into DB\n";
             $this->insert_chapter_page([
                     $pages[$i]['page_slug'],
                     $pages[$i]['page_image'],  
@@ -100,7 +127,8 @@ class main extends grabber{
         // return 
     }
 
-    public function manga($uri){
+    public function manga(){
+        echo "Insert manga into DB \n";
 
         try{
             $this->connection->beginTransaction();
@@ -108,15 +136,15 @@ class main extends grabber{
             $manga_check = $this->manga_check($this->data['name']);
 
             if(count($manga_check) > 0){
-                // $mangaId = $manga_check[0]['id'];
+                // $this->mangaId = $manga_check[0]['id'];
                 return false;
                 exit;
             }
             else{
 
                 //insert manga when manga_check 0
-                $mangaId = $this->insert_manga([
-                    str_replace(' ','-',$this->data['name']),
+                $this->mangaId = $this->insert_manga([
+                    str_replace(' ','-',strtolower($this->data['name'])),
                     $this->data['name'],
                     $this->data['otherName'],
                     $this->data['release'],
@@ -128,19 +156,21 @@ class main extends grabber{
             }
 
             //insert authors_manga
-            $this->insert_authors_manga($mangaId,$this->data['authors'],1);
+            $this->insert_authors_manga($this->mangaId,$this->data['authors'],1);
 
             //insert artists_manga
-            $this->insert_authors_manga($mangaId,[$this->data['artist']],2);
+            $this->insert_authors_manga($this->mangaId,[$this->data['artist']],2);
 
             //insert categories
-            $this->insert_categories_manga($mangaId, $this->data['categories']);
+            $this->insert_categories_manga($this->mangaId, $this->data['categories']);
 
             $this->connection->commit();
 
             //upload img
-            $this->coverUpload($this->data['name'],$this->data['img']);
-            return true;
+            $this->coverUpload(strtolower($this->data['name']),$this->data['img']);
+
+            echo "Insert Success\n";
+            return $this;
         }
 
         catch(PDOExecption $e){

@@ -3,13 +3,4 @@
 require('lib/main.php');
 $main = new main();
 
-$main->execute('https://www.komikgue.com/manga/horimiya')->speChapter();
-
-// var_dump($main->chapters());
-
-// if($main->executeManga('https://www.komikgue.com/manga/horimiya')){
-//     echo 'Success';
-// }
-// else{
-//     echo "Something went wrong man or duplicate manga name..";
-// }
+$main->execute('https://www.komikgue.com/manga/mujang')->manga()->chapters();
