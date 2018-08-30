@@ -129,4 +129,29 @@ class method extends db{
         $stmt->execute($data);
     }
 
+    public function get_error_chapter(){
+        $query = "SELECT * FROM error_chapter";
+        
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public function delete_error_chapter($id){
+        $query = "DELETE FROM error_chapter WHERE id = ?";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([$id]);
+    }
+
+    public function get_last_chapter(){
+        $query = "SELECT a.id,a.slug,max(b.number + 0) AS last_chapter FROM manga a JOIN chapter b ON a.id = b.manga_id GROUP BY a.id";
+        
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
 }

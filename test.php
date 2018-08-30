@@ -3,4 +3,6 @@
 require('lib/main.php');
 $main = new main();
 
-var_dump($main->grabPages('https://www.komikgue.com/manga/shokugeki-no-soma/150/1'));
+// var_dump($main->grabManga('https://www.komikgue.com/manga/horimiya'));
+
+$main->updateChapter();

@@ -220,4 +220,39 @@ class main extends grabber{
         } 
 
     }
+
+    public function updateChapter(){
+        echo "get last chapter \n";
+        $last_chapters = $this->get_last_chapter();
+
+        foreach ($last_chapters as $last_chapter) {
+            echo "grab".$last_chapter['slug']."\n";
+            $grabManga = $this->grabManga('https://www.komikgue.com/manga/'.$last_chapter['slug']);
+            $chapters = $grabManga['chapters'];
+
+            echo "update ".$last_chapter['slug']."\n";
+            foreach ($chapters as $chapter) {
+
+                if($chapter['number'] > $last_chapter['last_chapter']){
+
+                    echo $last_chapter['slug']." chapter ".$chapter['number']."\n";
+                    $this->speChapter([
+                        'manganame' => $last_chapter['slug'],
+                        'slug'      => $chapter['number'],
+                        'name'      => $chapter['title'],
+                        'number'    => $chapter['number'],
+                        'volume'    => null,
+                        'manga_id'  => $last_chapter['id'],
+                        'user_id'   => 1,
+                        'link'      => $chapter['link']
+                    ]);
+                }
+                
+            }
+
+            echo $last_chapter['slug']." updated. \n";
+
+        }
+        
+    }
 }
