@@ -10,8 +10,6 @@ class main extends grabber{
 
     public function coverUpload($name,$url){
         
-        $name = str_replace(' ','-',$name);
-        
         //create directory
         if (!file_exists("../uploads/manga/$name") && !is_dir("../uploads/manga/$name")) {
             mkdir("../uploads/manga/$name");         
@@ -77,7 +75,7 @@ class main extends grabber{
             echo " Insert chapter".$this->data['chapters'][$i]['title']."\n";  
 
             $this->speChapter([
-                'manganame' => str_replace(' ','-',strtolower($this->data['name'])),
+                'manganame' => $this->data['slug'],
                 'slug'      => $this->data['chapters'][$i]['number'],
                 'name'      => $this->data['chapters'][$i]['title'],
                 'number'    => $this->data['chapters'][$i]['number'],
@@ -157,9 +155,18 @@ class main extends grabber{
         catch(Exception $e){
             $this->connection->rollBack();
 
-            $this->insert_error_chapter($data);
+            $this->insert_error_chapter([
+                $data['manganame'],
+                $data['slug'],
+                $data['name'],
+                $data['number'],
+                $data['volume'],
+                $data['manga_id'],
+                $data['user_id'],
+                $data['link']
+            ]);
 
-            echo 'Error man '.$e->getMessage;
+            echo 'Error man '.$e->getMessage();
         }
 
         // return 
@@ -182,7 +189,7 @@ class main extends grabber{
 
                 //insert manga when manga_check 0
                 $this->mangaId = $this->insert_manga([
-                    str_replace(' ','-',strtolower($this->data['name'])),
+                    $this->data['slug'],
                     $this->data['name'],
                     $this->data['otherName'],
                     $this->data['release'],
@@ -203,7 +210,7 @@ class main extends grabber{
             $this->insert_categories_manga($this->mangaId, $this->data['categories']);
 
             //upload img
-            $this->coverUpload(strtolower($this->data['name']),$this->data['img']);
+            $this->coverUpload($this->data['slug'],$this->data['img']);
 
             $this->connection->commit();
 
@@ -211,7 +218,7 @@ class main extends grabber{
             return $this;
         }
 
-        catch(Execption $e){
+        catch(Exception $e){
             //rollback if error
             $this->connection->rollBack();
 
@@ -248,14 +255,14 @@ class main extends grabber{
         $last_chapters = $this->get_last_chapter();
 
         foreach ($last_chapters as $last_chapter) {
-            echo "grab".$last_chapter['slug']."\n";
+            echo "grab ".$last_chapter['slug']."\n";
             $grabManga = $this->grabManga('https://www.komikgue.com/manga/'.$last_chapter['slug']);
             $chapters = $grabManga['chapters'];
 
             echo "update ".$last_chapter['slug']."\n";
             foreach ($chapters as $chapter) {
 
-                if($chapter['number'] > $last_chapter['last_chapter']){
+                if(str_replace(',','.',$chapter['number']) > str_replace(',','.',$last_chapter['last_chapter'])){
 
                     echo $last_chapter['slug']." chapter ".$chapter['number']."\n";
                     $this->speChapter([

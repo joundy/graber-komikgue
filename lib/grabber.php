@@ -100,6 +100,10 @@ class grabber extends method{
         $this->uri = $uri;
         $this->getData();
 
+        $slug = explode('/',$uri);
+        $slug = end($slug);
+
+
         if($this->getData == false){
             return false;
             exit;
@@ -136,6 +140,7 @@ class grabber extends method{
 
         $data = [
             'name'       => $name,
+            'slug'       => $slug,
             'status'     => $status,
             'otherName'  => $otherName,
             'release'    => $release,
