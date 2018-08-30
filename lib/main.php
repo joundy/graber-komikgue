@@ -221,6 +221,28 @@ class main extends grabber{
 
     }
 
+    public function fixChapter(){
+        echo "get error chapter \n";
+        $chapters = $this->get_error_chapter();
+
+        foreach($chapters as $value){
+            $this->speChapter([
+                'manganame' => $value['manganame'],
+                'slug'      => $value['slug'],
+                'name'      => $value['name'],
+                'number'    => $value['number'],
+                'volume'    => $value['volume'],
+                'manga_id'  => $value['manga_id'],
+                'user_id'   => $value['user_id'],
+                'link'      => $value['link']
+            ]);
+            
+            echo "delete error chapter \n";
+            $this->delete_error_chapter($value['id']);
+
+        }
+    }
+
     public function updateChapter(){
         echo "get last chapter \n";
         $last_chapters = $this->get_last_chapter();
