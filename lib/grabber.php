@@ -16,9 +16,17 @@ class grabber extends method{
     public function getData(){
         $opts = array('http'=>array('header' => "User-Agent:MyAgent/1.0\r\n"));
         $context = stream_context_create($opts);
-        $html = file_get_contents($this->uri,false,$context);
 
-        $this->getData = $html;
+        $html = @file_get_contents($this->uri,false,$context);
+
+        if(!$html){
+            $this->getData = false;
+            exit;
+        }
+        else{
+            $this->getData = $html;
+        }
+
     }
 
     public function getInfo(){
@@ -30,7 +38,7 @@ class grabber extends method{
     }
 
     public function grabUnSpecific($word){
-        if(strpos($this->getInfo, $word) !== false){
+        if(strpos($this->getInfo, $word)){
             $grab = explode("<dt>$word</dt> <dd>",$this->getInfo);
             $grab = explode('</dd>',$grab[1]);
             $grab = $grab[0];
@@ -43,7 +51,7 @@ class grabber extends method{
     }
 
     public function grabArraysData($word){
-        if(strpos($this->getInfo, $word) !== false){
+        if(strpos($this->getInfo, $word)){
             $grab = explode("<dt>$word</dt> <dd>",$this->getInfo);
             $grab = explode('</dd>',$grab[1]);
             $grab = $grab[0];
@@ -67,31 +75,46 @@ class grabber extends method{
     public function grabPages($uri){
         $opts = array('http'=>array('header' => "User-Agent:MyAgent/1.0\r\n"));
         $context = stream_context_create($opts);
-        $data = file_get_contents($uri,false,$context);
+
+        if(!($data = file_get_contents($uri,false,$context))){
+            return false;
+            exit;
+        }
+
         $data = explode('var pages =',$data);
         $data = explode('var next_chapter =',$data[1]);
-            
-        $data = json_decode(str_replace('];',']',$data[0]), TRUE);
 
-        return $data;
+        if(strpos($data[0],'}];')){
+            $data = str_replace('];',']',$data[0]);
+        }
+        else{
+            $data = str_replace('};','}',$data[0]);
+        }
+
+        return json_decode($data, TRUE);
     }
 
     public function grabManga($uri){
         $this->dom = new Dom();
 
         $this->uri = $uri;
-
         $this->getData();
+
+        if($this->getData == false){
+            return false;
+            exit;
+        }
+
         $this->getInfo();
 
         $name   = $this->dom->find('.widget-title',0)->text;
         $status = $this->dom->find('.label',0)->text;
 
-        if(strpos($this->getData, '<strong>Sipnosis</strong>') !== false){
+        if(strpos($this->getData, '<strong>Sipnosis</strong>')){
             $summary = $this->dom->find('p[style=margin-bottom:0;]',0)->text;
         }
         else{
-            $summary = 'yolo';
+            $summary = null;
         }
 
         $chapters = [];

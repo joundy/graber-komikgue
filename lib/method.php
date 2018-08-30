@@ -115,4 +115,18 @@ class method extends db{
         return $lastId;
     }
 
+    public function insert_error_manga($url){
+        $query = "INSERT INTO error_manga (url) VALUES (?)";
+        
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([$url]);
+    }
+
+    public function insert_error_chapter($data){
+        $query = "INSERT INTO error_chapter (manganame, slug, name, number, volume, manga_id, user_id, link) VALUES (?,?,?,?,?,?,?,?)";
+        
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute($data);
+    }
+
 }

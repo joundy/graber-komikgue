@@ -1,4 +1,6 @@
 <?php
 
-$link = 'https://www.komikgue.com/manga/horimiya/90/1';
-var_dump(explode('/',$link));
+require('lib/main.php');
+$main = new main();
+
+var_dump($main->grabPages('https://www.komikgue.com/manga/shokugeki-no-soma/150/1'));

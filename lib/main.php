@@ -44,12 +44,29 @@ class main extends grabber{
 
     }   
 
-    public function execute($uri){
-        echo "Grab Manga $uri \n";
-        $this->data = $this->grabManga($uri);
+    public function execute($url){
+        echo "Grab Manga $url \n";
 
-        var_dump($this->data);
+        var_dump($this->grabManga($url));
+
+        try{
+            $grabManga = $this->grabManga($url);
+
+            if($grabManga == false){
+                throw new Exception('Failed load manga url');
+            }
+
+            $this->data = $grabManga;
+        }
+        catch(Exception $e){
+            echo $e->getMessage();
+
+            $this->insert_error_manga($url);
+            die;
+        }
+
         return $this;
+
     }
 
     public function chapters(){
@@ -90,39 +107,59 @@ class main extends grabber{
     public function chapter($data){
         echo "Insert chapter into DB\n";
 
-        $chapterId = $this->insert_chapter([
-            $data['slug'],
-            $data['name'],
-            $data['number'],
-            $data['volume'],
-            $data['manga_id'],
-            $data['user_id']
-        ]);
+        try{
 
-        echo "Grab pages \n";
-        $pages = $this->grabPages($data['link']);
+            $this->connection->beginTransaction();
 
-        for ($i=0; $i < count($pages) ;  $i++) { 
+            $chapterId = $this->insert_chapter([
+                $data['slug'],
+                $data['name'],
+                $data['number'],
+                $data['volume'],
+                $data['manga_id'],
+                $data['user_id']
+            ]);
+    
+            echo "Grab pages \n";
+            $pages = $this->grabPages($data['link']);
 
-            echo  "Insert page ".$pages[$i]['page_slug']."\n";
-            if($pages[$i]['external'] == 0){
-
-                $link = explode('/',$data['link']);
-
-                $name = $link[4];
-                $slug_url = $link[5];
-
-                $url = "https://www.komikgue.com/uploads/manga/$name/chapters/".$slug_url."/".$pages[$i]['page_image'];
-                $this->pageUpload($data['manganame'],$url,$slug_url,$pages[$i]['page_image']);
+            if($pages == false){
+                throw new Exception('Failed load page url');
+            }
+    
+            for ($i=0; $i < count($pages) ;  $i++) { 
+    
+                echo  "Insert page ".$pages[$i]['page_slug']."\n";
+                if($pages[$i]['external'] == 0){
+    
+                    $link = explode('/',$data['link']);
+    
+                    $name = $link[4];
+                    $slug_url = $link[5];
+    
+                    $url = "https://www.komikgue.com/uploads/manga/$name/chapters/".$slug_url."/".$pages[$i]['page_image'];
+                    $this->pageUpload($data['manganame'],$url,$slug_url,$pages[$i]['page_image']);
+                }
+    
+                echo  "Insert page ".$pages[$i]['page_slug']." into DB\n";
+                $this->insert_chapter_page([
+                        $pages[$i]['page_slug'],
+                        $pages[$i]['page_image'],  
+                        $pages[$i]['external'],
+                        $chapterId
+                    ]);
             }
 
-            echo  "Insert page ".$pages[$i]['page_slug']." into DB\n";
-            $this->insert_chapter_page([
-                    $pages[$i]['page_slug'],
-                    $pages[$i]['page_image'],  
-                    $pages[$i]['external'],
-                    $chapterId
-                ]);
+            $this->connection->commit();
+
+        }
+
+        catch(Exception $e){
+            $this->connection->rollBack();
+
+            $this->insert_error_chapter($data);
+
+            echo 'Error man '.$e->getMessage;
         }
 
         // return 
@@ -165,19 +202,21 @@ class main extends grabber{
             //insert categories
             $this->insert_categories_manga($this->mangaId, $this->data['categories']);
 
-            $this->connection->commit();
-
             //upload img
             $this->coverUpload(strtolower($this->data['name']),$this->data['img']);
+
+            $this->connection->commit();
 
             echo "Insert Success\n";
             return $this;
         }
 
-        catch(PDOExecption $e){
+        catch(Execption $e){
             //rollback if error
             $this->connection->rollBack();
-            return false;
+
+            echo 'Error man '.$e->getMessage;
+            die;
         } 
 
     }
